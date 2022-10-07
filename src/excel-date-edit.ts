@@ -10,6 +10,8 @@ interface TurnAroundTime {
   hr_to_sec: number;
   min_to_sec: number;
   total_sec: number;
+  total_minutes: number;
+  grouping: "A" | "B" | "C";
 }
 
 const columns: Partial<Column>[] = [
@@ -19,6 +21,8 @@ const columns: Partial<Column>[] = [
   { header: "Hour to Sec", key: "hr_to_sec", width: 30 },
   { header: "Minutes to Sec", key: "min_to_sec", width: 30 },
   { header: "Total Sec", key: "total_sec", width: 30 },
+  { header: "Total Minutes", key: "total_minutes", width: 30 },
+  { header: "Grouping", key: "grouping", width: 30 },
 ];
 
 const getExcelD = async (filename: string) => {
@@ -30,6 +34,7 @@ const getExcelD = async (filename: string) => {
   console.log(`Dir: ${datafile}`);
   console.log("====================================");
   await wb.csv.readFile(datafile).then(async (sh) => {
+    let grouping: TurnAroundTime["grouping"] = "A";
     for (let i = 2; i <= sh.actualRowCount; i++) {
       const row = sh.getRow(i);
       const createdAt = dayjs(row.getCell("C").value as string);
@@ -41,6 +46,15 @@ const getExcelD = async (filename: string) => {
       const hr_to_sec = hr * 60 * 60;
       const min_to_sec = min * 60;
       const total_sec = total_minutes * 60;
+      if (total_minutes <= 120) {
+        grouping = "A";
+      }
+      if (total_minutes > 120 && total_minutes <= 240) {
+        grouping = "B";
+      }
+      if (total_minutes > 240) {
+        grouping = "C";
+      }
       turnAroundTime.push({
         hr,
         min,
@@ -48,6 +62,8 @@ const getExcelD = async (filename: string) => {
         hr_to_sec,
         min_to_sec,
         total_sec,
+        total_minutes,
+        grouping,
       });
     }
   });
